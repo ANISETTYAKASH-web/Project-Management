@@ -5,7 +5,7 @@ const tasksScheme = new mongoose.Schema({
     type: String,
     enum: {
       values: ["todo", "doing", "done"],
-      message: `${VALUE} is not valid pls select "todo"or"doing","done"`,
+      message: "Status is either: todo,doing,done",
     },
     default: "todo",
   },
