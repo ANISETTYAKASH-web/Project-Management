@@ -23,8 +23,10 @@ console.log("INSERTED 20 fake projects ");
 const userIds = await User.distinct("_id");
 const projectIds = await Project.distinct("_id");
 const tasks = createFakeTasks(userIds, projectIds);
+await Tasks.deleteMany({});
 await Tasks.insertMany(tasks);
 console.log("INSERTED fake 20 tasks with real user and project IDS");
 //INSERTING into userProjects Model
+await UsersProject.deleteMany({});
 await UsersProject.insertMany(createFakeUserProjects(userIds, projectIds));
 console.log("CREATED fake 20 relationships with real user and project IDS");
