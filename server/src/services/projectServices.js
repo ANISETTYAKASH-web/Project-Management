@@ -40,3 +40,7 @@ export async function deleteProject(data, project_id) {
   await userProjects.deleteMany({ Project: project_id });
   return delet;
 }
+//used in tasks(making sure that user is authorized to get tasks from particular project)
+export async function isAuthorized(data) {
+  return await userProjects.findOne(data);
+}
