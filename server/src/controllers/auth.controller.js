@@ -1,13 +1,21 @@
 import jwt from "jsonwebtoken";
 const login = async (req, res) => {
   const user = req.user;
-  const user_name = user.user_name;
-  const accessToken = jwt.sign({ user_name }, process.env.JWT_ACCESS_KEY, {
-    expiresIn: "10m",
-  });
-  const refreshToken = jwt.sign({ user_name }, process.env.JWT_REFRESH_KEY, {
-    expiresIn: "1d",
-  });
+
+  const accessToken = jwt.sign(
+    { user_name: user.user_name, user_id: user._id },
+    process.env.JWT_ACCESS_KEY,
+    {
+      expiresIn: "10m",
+    }
+  );
+  const refreshToken = jwt.sign(
+    { user_name: user.user_name, user_id: user._id },
+    process.env.JWT_REFRESH_KEY,
+    {
+      expiresIn: "1d",
+    }
+  );
   res.cookie("token", refreshToken, {
     httpOnly: true,
     secure: true,
@@ -28,7 +36,7 @@ const refresh = (req, res) => {
         });
       } else {
         const accessToken = jwt.sign(
-          { user_name: decoded.user_name },
+          { user_name: decoded.user_name, user_id: decoded.user_id },
           process.env.JWT_ACCESS_KEY,
           {
             expiresIn: "10m",
