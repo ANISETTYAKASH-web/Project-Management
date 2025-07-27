@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import projectRouter from "./routes/projectRoutes.js";
 import TaskRouter from "./routes/tasksRouter.js";
 import { connection } from "./config/mongodb.config.js";
+import UserRouter from "./routes/userRoutes.js";
+import AuthRouter from "./routes/authRoutes.js";
 
 //user defined imports
 const app = express();
@@ -26,6 +28,10 @@ dbConnection();
 app.get("/", (req, res) => {
   res.send("Hello World! hey");
 });
+
+//custom Routes
+app.use("/users", UserRouter);
+app.use("/auth", AuthRouter);
 app.use("/projects", projectRouter);
 app.use("/tasks", TaskRouter);
 app.listen(PORT, async () => {
