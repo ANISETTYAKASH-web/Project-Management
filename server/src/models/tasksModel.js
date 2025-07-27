@@ -9,8 +9,8 @@ const tasksScheme = new mongoose.Schema({
     },
     default: "todo",
   },
-  User: { type: mongoose.Types.ObjectId, ref: "User" },
-  Project: { type: mongoose.Types.ObjectId, ref: "Project" },
+  User: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+  Project: { type: mongoose.Types.ObjectId, ref: "Project", required: true },
 });
 
 export default mongoose.model("Tasks", tasksScheme);
