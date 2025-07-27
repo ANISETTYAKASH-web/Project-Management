@@ -2,9 +2,10 @@ import {
   createUser,
   getUserByEmail,
   getUserByUserName,
-} from "../services/userServices";
+} from "../services/userServices.js";
+import bcrypt from "bcryptjs";
 
-const signUp = async (req, res) => {
+const signUp = async (req, res, next) => {
   const { user_name, email, password } = req.body;
   if (!user_name || !email || !password) {
     return res.status(400).json({ message: "Please enter all the details" });
@@ -26,16 +27,18 @@ const signUp = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
 
-    await createUser(user_name, email, hashPassword);
-    res.status(201).json({ message: "Sign Up Successfull" });
+    const user = await createUser(user_name, email, hashPassword);
+    req.user = user;
+    next();
   } catch (error) {
     res
       .status(500)
       .json({ message: "Sign up failed Try again", error: error.message });
+    next(error);
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   const { user_name, password } = req.body;
   if (!user_name || !password) {
     return res.status(400).json({ message: "Please enter all the details" });
@@ -47,17 +50,21 @@ const login = async (req, res) => {
         .status(409)
         .json({ message: "User doesn't exist create a new Acount" });
     }
+
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
-    const checkPassword = await bcrypt.compare(hashPassword, user.password);
+
+    const checkPassword = await bcrypt.compare(password, user.password);
     if (!checkPassword) {
       return res.status(401).json({ message: "Wrong password" });
     }
-    res.status(200).json("Login Successfull");
+    req.user = user;
+    next();
   } catch (error) {
     res
       .status(401)
       .json({ message: "Internal Server Error", error: error.message });
+    next(error);
   }
 };
 export { signUp, login };
