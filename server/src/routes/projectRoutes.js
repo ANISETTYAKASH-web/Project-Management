@@ -6,12 +6,13 @@ import {
   deleteProjects,
   createProjects,
 } from "../controllers/projectController.js";
+import AuthorizeUser from "../middleware/auth.middleware.js";
 const projectRouter = express.Router();
 
-projectRouter.get("/getAllProjects", allProjects);
-projectRouter.get("/getProject", projectByName);
-projectRouter.put("/update", updateProjects);
-projectRouter.post("/create", createProjects);
-projectRouter.delete("/delete", deleteProjects);
+projectRouter.get("/getAllProjects", AuthorizeUser, allProjects);
+projectRouter.get("/getProject", AuthorizeUser, projectByName);
+projectRouter.put("/update", AuthorizeUser, updateProjects);
+projectRouter.post("/create", AuthorizeUser, createProjects);
+projectRouter.delete("/delete", AuthorizeUser, deleteProjects);
 
 export default projectRouter;
