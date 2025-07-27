@@ -1,4 +1,4 @@
-import User from "../models/usersModel";
+import User from "../models/usersModel.js";
 export async function getUserByEmail(email) {
   return await User.findOne({ email: email });
 }
