@@ -1,6 +1,7 @@
-import { verify } from "jsonwebtoken";
-export default AuthorizeUser = (req, res, next) => {
-  const authHeader = req.header["authorization"];
+import jwt from "jsonwebtoken";
+const { verify } = jwt;
+const AuthorizeUser = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   if (token == null) {
     return res.json({ message: "Unauthorized Login Again" });
@@ -8,7 +9,7 @@ export default AuthorizeUser = (req, res, next) => {
   verify(token, process.env.JWT_ACCESS_KEY, (err, user_name) => {
     if (err) {
       return res.json({
-        message: "Unauthorized Login Again",
+        message: "Unauthorized, Please Login Again",
         error: err.message,
       });
     }
@@ -16,3 +17,4 @@ export default AuthorizeUser = (req, res, next) => {
     next();
   });
 };
+export default AuthorizeUser;
