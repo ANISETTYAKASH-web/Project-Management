@@ -1,15 +1,14 @@
-import e from "express";
 import {
   getAllProjects,
   getProjectByName,
   createProject,
   updateProject,
   deleteProject,
-  authorized,
 } from "../services/projectServices.js";
 const allProjects = async (req, res) => {
+  const user = req.user;
   try {
-    const projects = await getAllProjects();
+    const projects = await getAllProjects({ User: user.user_id });
     if (projects.length === 0) {
       return res.status(200).json({ message: "no projects available" });
     }
@@ -23,37 +22,40 @@ const allProjects = async (req, res) => {
 const projectByName = async (req, res) => {
   try {
     const { name } = req.body;
-    const projects = await getProjectByName(name);
-    if (projects.length === 0) {
+    const user = req.user;
+    const project = await getProjectByName(name, user);
+    if (project === undefined) {
       return res.json({ message: "Project with name not found" });
     }
-    if (projects.length >= 2) {
-      return res.json({
-        message: "Multiple projects Found",
-        projects: projects,
-      });
-    }
-    res.status(200).json({ projects: projects });
+
+    res.status(200).json({ project: project });
   } catch (error) {
     res.status(404).json({ message: "Internal Server Error" });
   }
 };
 
 const createProjects = async (req, res) => {
-  const { name, description, team_name, budget } = req.body;
+  const { name, description, budget } = req.body;
+  const user = req.user;
   const projectData = {};
-  if (!name || !team_name) {
+  if (!name) {
     return res.status(400).json({ message: "Insufficient Details" });
   }
   if (description) projectData.description = description;
   if (budget) projectData.budget = budget;
   projectData.name = name;
-  projectData.teamName = team_name;
+
   try {
-    const newProject = await createProject(projectData);
+    const alreadyAvailable = await getProjectByName(name, user);
+    if (alreadyAvailable !== undefined) {
+      return res
+        .status(401)
+        .json({ message: "Project with that name already exists" });
+    }
+    const newProject = await createProject(projectData, user);
     res
       .status(201)
-      .json({ message: "Project created Succesfully yoooo", data: newProject });
+      .json({ message: "Project created Succesfully yooo", data: newProject });
   } catch (error) {
     res
       .status(500)
@@ -61,8 +63,9 @@ const createProjects = async (req, res) => {
   }
 };
 const updateProjects = async (req, res) => {
-  const { name, team_name, description, budget } = req.body;
-  if (!name || !team_name) {
+  const { name, description, budget } = req.body;
+  const user = req.user;
+  if (!name) {
     return res.status(400).json({ message: "Insufficient Details" });
   }
   const update = {};
@@ -70,14 +73,15 @@ const updateProjects = async (req, res) => {
   if (budget) update.budget = budget;
   try {
     //checking if project is there to update it
-    const check = await getProjectByName(name);
-    if (check.length === 0) {
-      return res.status(404).json({ message: "Project Not Found" });
+    const check = await getProjectByName(name, user);
+    if (check === undefined) {
+      return res
+        .status(401)
+        .json({ message: "Project with that name doesn't exists" });
     }
-    //checking if he belongs to the same time to update it
-    const isAuthorized = await authorized({ name: name, teamName: team_name });
-    if (isAuthorized.length === 0) {
-      return res.status(404).json({ message: "Team is not Authorized" });
+
+    if (check.Role !== "owner") {
+      return res.status(401).json({ message: "you are not authorized" });
     }
     const updated = await updateProject({ name }, update);
     res.status(200).json({ message: "Updated Successful", update: updated });
@@ -86,24 +90,28 @@ const updateProjects = async (req, res) => {
   }
 };
 const deleteProjects = async (req, res) => {
-  const { name, team_name, description, budget } = req.body;
-  if (!name || !team_name) {
+  const { name } = req.body;
+  const user = req.user;
+  if (!name) {
     return res.status(400).json({ message: "Insufficient Details" });
   }
   try {
-    const check = await getProjectByName(name);
-    if (check.length === 0) {
-      return res.status(404).json({ message: "Project Not Found" });
+    const check = await getProjectByName(name, user);
+    if (check === undefined) {
+      return res
+        .status(401)
+        .json({ message: "Project with that name doesn't exists" });
     }
-
-    const isAuthorized = await authorized({ name: name, teamName: team_name });
-    if (isAuthorized.length === 0) {
-      return res.status(404).json({ message: "Team is not Authorized" });
+    // console.log("check", check.Role);
+    if (check.Role !== "owner") {
+      return res.status(401).json({ message: "you are not authorized" });
     }
-    const deleted = await deleteProject({ name: name });
+    const deleted = await deleteProject({ name: name }, check.Project._id);
     res.status(200).json({ message: "Deleted Successful", data: deleted });
   } catch (error) {
-    res.status(404).json({ message: "Internal Server Error" });
+    res
+      .status(404)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };
 export {
