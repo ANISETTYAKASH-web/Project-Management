@@ -1,30 +1,21 @@
-import * as jwt from "jsonwebtoken";
-
-const login = (req, res) => {
-  const { user_name, password } = req.body;
-  const user = {
-    user_name: "akash",
-    password: "akash",
-  };
-  if (user_name === user.user_name && password === user.password) {
-    const accessToken = jwt.sign({ user_name }, process.env.JWT_ACCESS_KEY, {
-      expiresIn: "10m",
-    });
-    const refreshToken = jwt.sign({ user_name }, process.env.JWT_REFRESH_KEY, {
-      expiresIn: "1d",
-    });
-    res.cookie("token", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-    return res.json({ accessToken });
-  } else {
-    res.json("Invalid Credentials");
-  }
+import jwt from "jsonwebtoken";
+const login = async (req, res) => {
+  const user = req.user;
+  const user_name = user.user_name;
+  const accessToken = jwt.sign({ user_name }, process.env.JWT_ACCESS_KEY, {
+    expiresIn: "10m",
+  });
+  const refreshToken = jwt.sign({ user_name }, process.env.JWT_REFRESH_KEY, {
+    expiresIn: "1d",
+  });
+  res.cookie("token", refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+  res.status(200).json({ message: "Login Successfull", token: accessToken });
 };
-
 const refresh = (req, res) => {
   if (req.cookies.token) {
     const token = req.cookies.token;
