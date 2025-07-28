@@ -6,11 +6,10 @@ import {
   updateTask,
   deleteTask,
 } from "../services/tasksService.js";
-const getAllTasks = async (req, res) => {
+import AppError from "../utils/AppError.js";
+const getAllTasks = async (req, res, next) => {
   const { project_id } = req.query;
   const UserId = req.user.user_id;
-  console.log(UserId);
-  console.log(project_id);
   try {
     const isMember = await isAuthorized({
       User: UserId,
@@ -18,31 +17,26 @@ const getAllTasks = async (req, res) => {
     });
     console.log(isMember);
     if (!isMember) {
-      return res
-        .status(401)
-        .json({ message: "You are not authorized to access this project" });
+      return next(
+        new AppError("You are not authorized to access this project", 401)
+      );
     }
     const tasks = await getAllTask({ User: UserId, Project: project_id });
     if (!tasks) {
-      return res
-        .status(200)
-        .json({ message: "Tasks are Empty Please Add tasks" });
+      next(new AppError("Tasks are Empty. Please add tasks.", 404));
     }
-    res.status(200).json({ message: "Success", tasks: tasks });
+    res.status(200).json({ success: true, message: "Success", tasks: tasks });
   } catch (error) {
-    res
-      .status(404)
-      .json({ message: "Internal Server Error", error: error.message });
+    next(new AppError("Internal Server Error", 500, error));
   }
 };
-
-const getTasksByName = async (req, res) => {
+const getTasksByName = async (req, res, next) => {
   const { name } = req.body;
   const { project_id } = req.query;
 
   const UserId = req.user.user_id;
   if (!name) {
-    return res.status(401).json({ message: "Insufficient Details" });
+    return next(new AppError("Insufficient Details", 400));
   }
   try {
     const isMember = await isAuthorized({
@@ -50,9 +44,9 @@ const getTasksByName = async (req, res) => {
       Project: project_id,
     });
     if (!isMember) {
-      return res
-        .status(401)
-        .json({ message: "You are not authorized to access this project" });
+      return next(
+        new AppError("You are not authorized to access this project", 401)
+      );
     }
 
     const task = await getTaskByName({
@@ -61,23 +55,19 @@ const getTasksByName = async (req, res) => {
       Project: project_id,
     });
     if (!task) {
-      return res
-        .status(200)
-        .json({ message: "Tasks are Empty Please Add tasks" });
+      return next(new AppError("Tasks are Empty. Please add tasks.", 404));
     }
-    res.status(200).json({ message: "Success", tasks: task });
+    res.status(200).json({ success: true, message: "Success", tasks: task });
   } catch (error) {
-    res
-      .status(404)
-      .json({ message: "Internal Server Error", error: error.message });
+    next(new AppError("Internal Server Error", 500, error));
   }
 };
 
-const createTasks = async (req, res) => {
+const createTasks = async (req, res, next) => {
   const { name, status } = req.body;
   const { project_id } = req.query;
   if (!name) {
-    return res.status(401).json({ message: "Insufficient Details" });
+    return next(new AppError("Insufficient Details", 400));
   }
   const UserId = req.user.user_id;
   try {
@@ -86,20 +76,18 @@ const createTasks = async (req, res) => {
     // if (user) task.User = user;
     // if (project) task.Project = project;
     const newTask = await createTask(task);
-    res.status(200).json({ message: "Success", tasks: newTask });
+    res.status(200).json({ success: true, message: "Success", tasks: newTask });
   } catch (error) {
-    res
-      .status(404)
-      .json({ message: "Internal Server Error", error: error.message });
+    next(new AppError("Internal Server Error", 500, error));
   }
 };
 
-const updateTasks = async (req, res) => {
+const updateTasks = async (req, res, next) => {
   const { name, status } = req.body;
   const UserId = req.user.user_id;
   const { project_id } = req.query;
   if (!name || !status) {
-    return res.status(401).json({ message: "Insufficient Details" });
+    return next(new AppError("Insufficient Details", 400));
   }
 
   const task = { name: name, User: UserId, Project: project_id };
@@ -111,9 +99,9 @@ const updateTasks = async (req, res) => {
       Project: project_id,
     });
     if (!isMember) {
-      return res
-        .status(401)
-        .json({ message: "You are not authorized to access this project" });
+      return next(
+        new AppError("You are not authorized to access this project", 401)
+      );
     }
 
     const check = getTaskByName({
@@ -122,21 +110,21 @@ const updateTasks = async (req, res) => {
       Project: project_id,
     });
     if (check.length === 0) {
-      return res.status(401).json({ message: "Task Doesn't Exist" });
+      return next(new AppError("Task doesn't exist", 404));
     }
     const tasks = await updateTask(task);
-    res.status(200).json({ message: "Successfully Updated", task: tasks });
-  } catch (error) {
     res
-      .status(404)
-      .json({ message: "Internal Server Error", error: error.message });
+      .status(200)
+      .json({ success: true, message: "Successfully Updated", task: tasks });
+  } catch (error) {
+    next(new AppError("Internal Server Error", 500, error));
   }
 };
 
-const deleteTasks = async (req, res) => {
+const deleteTasks = async (req, res, next) => {
   const { name } = req.body;
   if (!name) {
-    return res.status(401).json({ message: "Insufficient Details" });
+    return next(new AppError("Insufficient Details", 400));
   }
   const { project_id } = req.query;
   const UserId = req.user.user_id;
@@ -146,9 +134,9 @@ const deleteTasks = async (req, res) => {
       Project: project_id,
     });
     if (!isMember) {
-      return res
-        .status(401)
-        .json({ message: "You are not authorized to access this project" });
+      return next(
+        new AppError("You are not authorized to access this project", 401)
+      );
     }
 
     const check = getTaskByName({
@@ -157,7 +145,8 @@ const deleteTasks = async (req, res) => {
       Project: project_id,
     });
     if (check.length === 0) {
-      return res.status(401).json({ message: "Task Doesn't Exist" });
+      // return res.status(401).json({ message: "Task Doesn't Exist" });
+      return next(new AppError("Task doesn't exist", 404));
     }
 
     // console.log(check);
@@ -166,11 +155,13 @@ const deleteTasks = async (req, res) => {
     const deletedTasks = await deleteTask(task);
     res
       .status(200)
-      .json({ message: "Successfully Deleted", task: deletedTasks });
+      .json({
+        success: true,
+        message: "Successfully Deleted",
+        task: deletedTasks,
+      });
   } catch (error) {
-    res
-      .status(404)
-      .json({ message: "Internal Server Error", error: error.message });
+    next(new AppError("Internal Server Error", 500, error));
   }
 };
 export { getAllTasks, getTasksByName, createTasks, updateTasks, deleteTasks };

@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import AppError from "../utils/AppError.js";
 const login = async (req, res) => {
   const user = req.user;
 
@@ -22,18 +23,17 @@ const login = async (req, res) => {
     sameSite: "None",
     maxAge: 24 * 60 * 60 * 1000,
   });
-  res.status(200).json({ message: "Login Successfull", token: accessToken });
+  res
+    .status(200)
+    .json({ success: true, message: "Login Successfull", token: accessToken });
 };
-const refresh = (req, res) => {
+const refresh = (req, res, next) => {
   if (req.cookies.token) {
     const token = req.cookies.token;
 
     jwt.verify(token, process.env.JWT_REFRESH_KEY, (err, decoded) => {
       if (err) {
-        res.json({
-          message: "Invalid Session Login again",
-          error: err.message,
-        });
+        return next(new AppError("Invalid session. Login again.", 401, err));
       } else {
         const accessToken = jwt.sign(
           { user_name: decoded.user_name, user_id: decoded.user_id },
@@ -46,7 +46,7 @@ const refresh = (req, res) => {
       }
     });
   } else {
-    res.json({ message: "Invalid Session Login again" });
+    next(new AppError("Invalid session. Login again.", 401));
   }
 };
 export { login, refresh };

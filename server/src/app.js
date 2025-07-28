@@ -1,4 +1,6 @@
 import "dotenv/config";
+import errorHandler from "./middleware/errorHandler.js";
+import AppError from "./utils/AppError.js";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -20,7 +22,8 @@ const dbConnection = async (params) => {
   try {
     await connection();
   } catch (error) {
-    console.log("DB CONNECTION FAILED", error);
+    // console.log("DB CONNECTION FAILED", error);
+    next(new Error("failed to connect to DB"));
     process.exit(1);
   }
 };
@@ -30,10 +33,18 @@ app.get("/", (req, res) => {
 });
 
 //custom Routes
+app.get("/favicon.ico", (req, res) => res.status(200));
 app.use("/users", UserRouter);
 app.use("/auth", AuthRouter);
 app.use("/projects", projectRouter);
 app.use("/tasks", TaskRouter);
+app.all("/{*any}", (req, res, next) => {
+  next(
+    new AppError(`requested ${req.originalUrl} is not found on the server`, 404)
+  );
+});
+
+app.use(errorHandler);
 app.listen(PORT, async () => {
   console.log("Listening on port:", PORT);
 });

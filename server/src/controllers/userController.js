@@ -3,25 +3,29 @@ import {
   getUserByEmail,
   getUserByUserName,
 } from "../services/userServices.js";
+import AppError from "../utils/AppError.js";
 import bcrypt from "bcryptjs";
 
 const signUp = async (req, res, next) => {
   const { user_name, email, password } = req.body;
   if (!user_name || !email || !password) {
-    return res.status(400).json({ message: "Please enter all the details" });
+    return next(new AppError("Please enter all the details", 400));
   }
   try {
     const userExists = await getUserByUserName(user_name);
     if (userExists) {
-      return res
-        .status(409)
-        .json({ message: "UserName already taken pls enter a new one" });
+      return next(
+        new AppError("Username already taken. Please enter a new one.", 409)
+      );
     }
     const emailExists = await getUserByEmail(email);
     if (emailExists) {
-      return res.status(409).json({
-        message: "email already exists pls enter a new one or Login",
-      });
+      return next(
+        new AppError(
+          "Email already exists. Please enter a new one or login.",
+          409
+        )
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -31,24 +35,22 @@ const signUp = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Sign up failed Try again", error: error.message });
-    next(error);
+    next(new AppError("Sign up failed. Try again.", 500, error));
   }
 };
 
 const login = async (req, res, next) => {
   const { user_name, password } = req.body;
   if (!user_name || !password) {
-    return res.status(400).json({ message: "Please enter all the details" });
+    // return res.status(400).json({ message: "Please enter all the details" });
+    return next(new AppError("Please enter all the details", 400));
   }
   try {
     const user = await getUserByUserName(user_name);
     if (!user) {
-      return res
-        .status(409)
-        .json({ message: "User doesn't exist create a new Acount" });
+      return next(
+        new AppError("User doesn't exist. Create a new account.", 404)
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -56,15 +58,12 @@ const login = async (req, res, next) => {
 
     const checkPassword = await bcrypt.compare(password, user.password);
     if (!checkPassword) {
-      return res.status(401).json({ message: "Wrong password" });
+      return next(new AppError("Wrong password", 401));
     }
     req.user = user;
     next();
   } catch (error) {
-    res
-      .status(401)
-      .json({ message: "Internal Server Error", error: error.message });
-    next(error);
+    next(new AppError("Sign up failed. Try again.", 500, error));
   }
 };
 export { signUp, login };
