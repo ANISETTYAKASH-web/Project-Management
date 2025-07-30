@@ -7,12 +7,35 @@ import {
   createProjects,
 } from "../controllers/projectController.js";
 import AuthorizeUser from "../middleware/auth.middleware.js";
+import { validateRequest } from "../middleware/validateRequest.js";
+import { projectSchema } from "../validators/projectValidators.js";
 const projectRouter = express.Router();
 
 projectRouter.get("/getAllProjects", AuthorizeUser, allProjects);
-projectRouter.get("/getProject", AuthorizeUser, projectByName);
-projectRouter.put("/update", AuthorizeUser, updateProjects);
-projectRouter.post("/create", AuthorizeUser, createProjects);
-projectRouter.delete("/delete", AuthorizeUser, deleteProjects);
+projectRouter.get(
+  "/getProject",
+  AuthorizeUser,
+  validateRequest(projectSchema),
+  projectByName
+);
+projectRouter.post(
+  "/create",
+  AuthorizeUser,
+  validateRequest(projectSchema),
+  createProjects
+);
+projectRouter.put(
+  "/update",
+  AuthorizeUser,
+  validateRequest(projectSchema),
+  updateProjects
+);
+
+projectRouter.delete(
+  "/delete",
+  AuthorizeUser,
+  validateRequest(projectSchema),
+  deleteProjects
+);
 
 export default projectRouter;
