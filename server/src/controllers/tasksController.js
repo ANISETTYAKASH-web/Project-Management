@@ -15,7 +15,6 @@ const getAllTasks = async (req, res, next) => {
       User: UserId,
       Project: project_id,
     });
-    console.log(isMember);
     if (!isMember) {
       return next(
         new AppError("You are not authorized to access this project", 401)
@@ -153,13 +152,11 @@ const deleteTasks = async (req, res, next) => {
     const task = { name: name, User: UserId, Project: project_id };
 
     const deletedTasks = await deleteTask(task);
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Successfully Deleted",
-        task: deletedTasks,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Successfully Deleted",
+      task: deletedTasks,
+    });
   } catch (error) {
     next(new AppError("Internal Server Error", 500, error));
   }
