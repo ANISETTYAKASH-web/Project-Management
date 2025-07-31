@@ -12,7 +12,6 @@ import AuthRouter from "./routes/authRoutes.js";
 
 //user defined imports
 const app = express();
-const PORT = process.env.PORT;
 //MiddleWare
 app.use(cors());
 app.use(express.json());
@@ -45,6 +44,7 @@ app.all("/{*any}", (req, res, next) => {
 });
 
 app.use(errorHandler);
-app.listen(PORT, async () => {
-  console.log("Listening on port:", PORT);
-});
+// app.listen(PORT, async () => {
+//   console.log("Listening on port:", PORT);
+// });
+export { app };
