@@ -5,6 +5,7 @@ import {
   updateProjects,
   deleteProjects,
   createProjects,
+  addUserToProject,
 } from "../controllers/projectController.js";
 import AuthorizeUser from "../middleware/auth.middleware.js";
 import { validateRequest } from "../middleware/validateRequest.js";
@@ -37,5 +38,5 @@ projectRouter.delete(
   validateRequest(projectSchema),
   deleteProjects
 );
-
+projectRouter.post("/addUser/:projectId", AuthorizeUser, addUserToProject);
 export default projectRouter;
