@@ -11,7 +11,7 @@ export async function createTask(data) {
 }
 
 export async function updateTask(data) {
-  await Tasks.updateMany({ name: data.name }, data);
+  return await Tasks.updateMany({ name: data.name }, data);
 }
 export async function deleteTask(data) {
   return await Tasks.deleteMany(data);
