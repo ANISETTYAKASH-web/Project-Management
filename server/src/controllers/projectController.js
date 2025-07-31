@@ -4,6 +4,9 @@ import {
   createProject,
   updateProject,
   deleteProject,
+  addUsersToProject,
+  getProjectByUser,
+  getNameFromId,
 } from "../services/projectServices.js";
 import AppError from "../utils/AppError.js";
 const allProjects = async (req, res, next) => {
@@ -126,10 +129,46 @@ const deleteProjects = async (req, res, next) => {
     next(new AppError("Internal Server Error", 500, error));
   }
 };
+const addUserToProject = async (req, res, next) => {
+  const project_id = req.params.projectId;
+  const user = req.user;
+  const { user_id } = req.body;
+  try {
+    const project = await getNameFromId(project_id);
+    if (!project) {
+      return next(new AppError("Project with that id doesn't exists", 409));
+    }
+    const name = project.name;
+    const check = await getProjectByName(name, user);
+
+    // if (check === undefined) {
+    //   // return res
+    //   //   .status(401)
+    //   //   .json({ message: "Project with that name doesn't exists" });
+    //   return next(new AppError("Project with that name doesn't exists", 409));
+    // }
+    // console.log("check", check.Role);
+    if (check.Role !== "owner") {
+      // return res.status(401).json({ message: "you are not authorized" });
+      return next(new AppError("you are not authorized", 401));
+    }
+    const alreadyUser = await getProjectByUser(project_id, user_id);
+    if (alreadyUser) {
+      return next(new AppError("Already User is part of the project", 409));
+    }
+    const addUser = await addUsersToProject(project_id, user_id);
+    res
+      .status(200)
+      .json({ success: true, message: "User added to the project", addUser });
+  } catch (error) {
+    next(new AppError("Internal Server Error", 500, error));
+  }
+};
 export {
   allProjects,
   projectByName,
   updateProjects,
   deleteProjects,
   createProjects,
+  addUserToProject,
 };
