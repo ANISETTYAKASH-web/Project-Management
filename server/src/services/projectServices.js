@@ -44,3 +44,19 @@ export async function deleteProject(data, project_id) {
 export async function isAuthorized(data) {
   return await userProjects.findOne(data);
 }
+export async function getProjectByUser(project_id, user_id) {
+  return userProjects.findOne({ Project: project_id, User: user_id });
+}
+export async function addUsersToProject(project_id, user_id) {
+  return await userProjects.create({
+    User: user_id,
+    Project: project_id,
+    Role: "member",
+  });
+}
+export async function getNameFromId(project_id) {
+  const ans = await Projects.findOne({
+    _id: project_id,
+  });
+  return ans;
+}
