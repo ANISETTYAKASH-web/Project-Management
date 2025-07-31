@@ -75,6 +75,8 @@ const createTasks = async (req, res, next) => {
     // if (user) task.User = user;
     // if (project) task.Project = project;
     const newTask = await createTask(task);
+    const io = req.app.get("io");
+    io.to(`project:${project_id}`).emit("task:created", newTask);
     res.status(200).json({ success: true, message: "Success", tasks: newTask });
   } catch (error) {
     next(new AppError("Internal Server Error", 500, error));
@@ -112,6 +114,9 @@ const updateTasks = async (req, res, next) => {
       return next(new AppError("Task doesn't exist", 404));
     }
     const tasks = await updateTask(task);
+    // console.log("hey", tasks);
+    const io = req.app.get("io");
+    io.to(`project:${project_id}`).emit("task:update", tasks);
     res
       .status(200)
       .json({ success: true, message: "Successfully Updated", task: tasks });
@@ -152,6 +157,9 @@ const deleteTasks = async (req, res, next) => {
     const task = { name: name, User: UserId, Project: project_id };
 
     const deletedTasks = await deleteTask(task);
+    const io = req.app.get("io");
+    io.to(`project:${project_id}`).emit("task:delete", deletedTasks);
+
     res.status(200).json({
       success: true,
       message: "Successfully Deleted",
