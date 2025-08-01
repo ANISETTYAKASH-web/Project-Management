@@ -1,0 +1,48 @@
+# This workflow is for a Node.js project.
+# It will run on every push and pull request to the 'main' branch.
+
+name: Node.js CI
+
+on:
+  # Trigger the workflow on push events to the 'main' branch
+  push:
+    branches:
+      - main
+  # Trigger the workflow on pull request events targeting the 'main' branch
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    # Use the latest Ubuntu runner for the job
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository's code
+      # This action checks out your repository under $GITHUB_WORKSPACE,
+      # so your workflow can access it.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the Node.js environment
+      # This action sets up a Node.js environment, which is required
+      # to run npm commands. We'll use a modern LTS version.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # You can change this to another LTS version like '18' or '22'
+
+      # Step 3: Install project dependencies
+      # This runs `npm install` to download all packages listed
+      # in your package.json file.
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Start the development server
+      # This step executes the 'dev' script defined in your package.json.
+      # This will start the application, but it's important to note that
+      # this job will hang until the process is manually killed.
+      # For a typical CI workflow, a dedicated test script is preferred.
+      - name: Start application
+        run: npm run dev
