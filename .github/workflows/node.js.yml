@@ -34,15 +34,16 @@ jobs:
           node-version: '20' # You can change this to another LTS version like '18' or '22'
 
       # Step 3: Install project dependencies
-      # This runs `npm install` to download all packages listed
-      # in your package.json file.
+      # This runs `npm install` inside the 'server' directory.
       - name: Install dependencies
-        run: npm install Project-Management/server 
+        working-directory: ./server
+        run: npm install
 
       # Step 4: Start the development server
-      # This step executes the 'dev' script defined in your package.json.
+      # This step executes the 'dev' script inside the 'server' directory.
       # This will start the application, but it's important to note that
       # this job will hang until the process is manually killed.
       # For a typical CI workflow, a dedicated test script is preferred.
       - name: Start application
+        working-directory: ./server
         run: npm run dev
