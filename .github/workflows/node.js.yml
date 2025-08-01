@@ -37,7 +37,7 @@ jobs:
       # This runs `npm install` to download all packages listed
       # in your package.json file.
       - name: Install dependencies
-        run: npm install Project-Management/server/package.json 
+        run: npm install Project-Management/server 
 
       # Step 4: Start the development server
       # This step executes the 'dev' script defined in your package.json.
