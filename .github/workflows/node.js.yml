@@ -46,4 +46,4 @@ jobs:
       # For a typical CI workflow, a dedicated test script is preferred.
       - name: Start application
         working-directory: ./server
-        run: npm run dev
+        run: npm run build
